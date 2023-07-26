@@ -4,6 +4,7 @@ import { UsersService } from '../users/users.service';
 import { AuthDto } from './dto/auth.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -14,13 +15,18 @@ export class AuthService {
 
   async signIn(@Body() authDto: AuthDto) {
     const user = await this.usersService.findOne(authDto);
-    if (user?.password !== authDto.password) {
+    if (user == null) {
+      throw new UnauthorizedException();
+    }
+    const password = await bcrypt.compare(authDto.password, user.password);
+    if (password !== true) {
       throw new UnauthorizedException();
     }
     const payload = {
+      id: user.id,
       email: user.email,
       password: user.password,
-      roles: user.roles,
+      role: user.role,
     };
     return {
       access_token: await this.jwtService.signAsync(payload),

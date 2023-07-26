@@ -3,16 +3,21 @@ import {
   Controller,
   Delete,
   Get,
+  Headers,
   Param,
   ParseIntPipe,
+  Put,
   UseGuards,
+  Post,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
-import { AuthDto } from 'src/auth/dto/auth.dto';
-import { Role } from 'src/roles/role.enum';
-import { Roles } from 'src/roles/roles.decorator';
-import { RolesGuard } from 'src/roles/roles.guard';
+import { AuthDto } from '../auth/dto/auth.dto';
+import { Role } from '../roles/role.enum';
+import { Roles } from '../roles/roles.decorator';
+import { RolesGuard } from '../roles/roles.guard';
+import { UpdateResult } from 'typeorm';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @UseGuards(RolesGuard)
 @Controller('users')
@@ -25,7 +30,7 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
-  @Get()
+  @Post()
   findOne(@Body() authDto: AuthDto): Promise<User> {
     return this.usersService.findOne(authDto);
   }
@@ -34,6 +39,14 @@ export class UsersController {
   @Get(':id')
   findOneForAdmin(@Param('id', ParseIntPipe) id: number): Promise<User> {
     return this.usersService.findOneForAdmin(id);
+  }
+
+  @Put()
+  update(
+    @Body() createUserDto: CreateUserDto,
+    @Headers('Authorization') authorization: string,
+  ): Promise<UpdateResult> {
+    return this.usersService.update(createUserDto, authorization);
   }
 
   @Delete()

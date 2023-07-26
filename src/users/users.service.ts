@@ -1,25 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { AuthDto } from 'src/auth/dto/auth.dto';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
-  create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<User> {
     const user = new User();
 
     user.name = createUserDto.name;
     user.age = createUserDto.age;
     user.email = createUserDto.email;
-    user.password = createUserDto.password;
-    user.roles = createUserDto.roles;
+    user.password = await bcrypt.hash(createUserDto.password, 10);
+    user.role = createUserDto.role;
 
     return this.usersRepository.save(user);
   }
@@ -35,8 +38,25 @@ export class UsersService {
   findOne(authDto: AuthDto): Promise<User> {
     return this.usersRepository.findOneBy({
       email: authDto.email,
-      password: authDto.password,
     });
+  }
+
+  async update(
+    createUserDto: CreateUserDto,
+    authorization: string,
+  ): Promise<UpdateResult> {
+    const token = authorization.replace('Bearer ', '');
+    const user = await this.jwtService.verifyAsync(token);
+    return this.usersRepository.update(
+      { id: user.id },
+      {
+        name: createUserDto.name,
+        age: createUserDto.age,
+        email: createUserDto.email,
+        password: createUserDto.password,
+        role: createUserDto.role,
+      },
+    );
   }
 
   async remove(authDto: AuthDto): Promise<void> {
