@@ -5,6 +5,7 @@ import { AuthDto } from './dto/auth.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { Token } from './types/token.type';
 
 @Injectable()
 export class AuthService {
@@ -13,7 +14,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(@Body() authDto: AuthDto) {
+  async signIn(@Body() authDto: AuthDto): Promise<Token> {
     const user = await this.usersService.findOne(authDto);
     if (user == null) {
       throw new UnauthorizedException();

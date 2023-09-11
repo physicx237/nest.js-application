@@ -4,6 +4,7 @@ import { Public } from './decorators/public.decorator';
 import { AuthDto } from './dto/auth.dto';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { User } from 'src/users/entities/user.entity';
+import { Token } from './types/token.type';
 
 @Controller()
 export class AuthController {
@@ -11,7 +12,7 @@ export class AuthController {
 
   @Public()
   @Post('sign-in')
-  signIn(@Body() authDto: AuthDto) {
+  signIn(@Body() authDto: AuthDto): Promise<Token> {
     return this.authService.signIn(authDto);
   }
 
